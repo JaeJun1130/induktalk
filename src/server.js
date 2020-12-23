@@ -4,16 +4,24 @@ import express from "express";
 import schema from "./schema";
 import logger from "morgan"; // 미들웨어
 import mysql from "mysql";
+
 import "./sequelize";
 
-const PORT = process.env.PORT || 4000;
+import "./passport";
+import { authenticateJwt } from "./passport";
+import { isAuth } from "./passport";
 
-const server = new ApolloServer({ schema });
+const PORT = process.env.PORT || 5000;
 
-const app = express(); //express 사용
-app.use(logger("dev")); //실행로고 찍기
-server.applyMiddleware({ app }); //아폴로서버위에 express 얹기
-
+const server = new ApolloServer({
+    schema,
+    context: ({ req }) => {
+        return {
+            req: req,
+            isAuth,
+        };
+    },
+});
 //mysql 연동
 const storage = mysql.createConnection({
     host: "1.231.176.58",
@@ -24,6 +32,7 @@ const storage = mysql.createConnection({
     timezone: "+09:00", // 한국 시간
     dateStrings: "date", // 시간
 });
+
 //에러면 에러리턴
 storage.connect((err) => {
     if (err) {
@@ -32,4 +41,9 @@ storage.connect((err) => {
     storage.end();
 });
 
+const app = express(); //express 사용
+app.use(logger("dev")); //실행로고 찍기
+app.use(authenticateJwt);
+
+server.applyMiddleware({ app }); //아폴로서버위에 express 얹기
 app.listen({ port: PORT }, () => console.log(`✅ Server ready at http://localhost:4000${server.graphqlPath}`));
