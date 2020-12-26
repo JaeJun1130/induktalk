@@ -8,6 +8,7 @@ const jwtOption = {
 };
 //cllient 요청을 보내는값이 payload
 const verifyUser = (jwt_payload, done) => {
+    console.log(jwt_payload, "verifyUser");
     if (jwt_payload) {
         return done(null, jwt_payload);
     } else {
@@ -24,6 +25,7 @@ export const isAuth = (request) => {
 
 export const authenticateJwt = (req, res, next) => {
     return passport.authenticate("jwt", { session: false }, (error, user) => {
+        console.log(user, "authenticateJwt");
         if (user) {
             req.user = user;
         }
